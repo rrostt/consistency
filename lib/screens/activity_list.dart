@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:intl/intl.dart';
 import '../widgets/activity_circle.dart';
+import '../widgets/date_observer.dart';
 import '../model/model.dart';
 import 'date_details.dart';
 
@@ -35,31 +36,38 @@ class ActivityList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: ScopedModelDescendant<MyModel>(
-      builder: (context, child, model) => ListView.builder(
-            itemBuilder: (context, i) {
-              var date = DateTime.now().subtract(Duration(days: i));
-              var year = date.year;
-              var dom = date.day;
-              var month = monthNames[date.subtract(Duration(days: 1)).month];
-              var dateStr = DateFormat("yyyy-MM-dd").format(date);
+        body: DateObserver(
+            builder: (context, now) => ScopedModelDescendant<MyModel>(
+                  builder: (context, child, model) => ListView.builder(
+                    itemBuilder: (context, i) {
+                      var date = now.subtract(Duration(days: i));
+                      var year = date.year;
+                      var dom = date.day;
+                      var month =
+                          monthNames[date.subtract(Duration(days: 1)).month];
+                      var dateStr = DateFormat("yyyy-MM-dd").format(date);
 
-              return FutureBuilder(
-                  future: model.getForDate(dateStr),
-                  initialData: <Activity>[],
-                  builder: (context, AsyncSnapshot<List<Activity>> snapshot) =>
-                      snapshot.hasError
-                          ? Text(snapshot.error.toString())
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                  if (i == 0) _monthLabel('$month $year'),
-                                  _dayItem(context, snapshot.data, date),
-                                  if (dom == 1) _monthLabel('$month $year'),
-                                ]));
-            },
-          ),
-    ));
+                      return FutureBuilder(
+                          future: model.getForDate(dateStr),
+                          initialData: <Activity>[],
+                          builder: (context,
+                                  AsyncSnapshot<List<Activity>> snapshot) =>
+                              snapshot.hasError
+                                  ? Text(snapshot.error.toString())
+                                  : Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                          if (i == 0)
+                                            _monthLabel('$month $year'),
+                                          _dayItem(
+                                              context, snapshot.data, date),
+                                          if (dom == 1)
+                                            _monthLabel('$month $year'),
+                                        ]));
+                    },
+                  ),
+                )));
   }
 
   Widget _monthLabel(label) {

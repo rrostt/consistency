@@ -4,50 +4,52 @@ import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 import '../widgets/activity_circle.dart';
+import '../widgets/date_observer.dart';
 import '../model/model.dart';
 import 'date_details.dart';
 
 class ActivityCalendarRound extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 237, 236, 238),
-      body: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10),
-        child: GridView.builder(
-          reverse: true,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 7,
-            childAspectRatio: 1,
-          ),
-          itemBuilder: (context, index) {
-            var today = DateTime.now();
-            var dayoffset = index - 2 * (index % 7) - 1 + today.weekday;
-            var date = today.subtract(Duration(days: dayoffset));
-            var dateStr = DateFormat("yyyy-MM-dd").format(date);
-            return GestureDetector(
-              onTap: () {
-                _showDetails(context, dateStr);
-              },
-              child: ScopedModelDescendant<MyModel>(
-                builder: (context, child, model) => FutureBuilder(
-                  future: model.getForDate(dateStr),
-                  initialData: <Activity>[],
-                  builder: (context, snapshot) => _DayWidget(
-                    children: snapshot.data
-                        .map<Widget>((activity) =>
-                            ActivityCircle(activity: activity, size: 12))
-                        .toList(),
-                    color: dayoffset >= 0
-                        ? Color.fromARGB(255, 255, 255, 255)
-                        : Color.fromARGB(128, 255, 255, 255),
-                  ),
-                ),
+        backgroundColor: Color.fromARGB(255, 237, 236, 238),
+        body: DateObserver(
+          builder: (context, now) => Container(
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: GridView.builder(
+              reverse: true,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                childAspectRatio: 1,
               ),
-            );
-          },
-        ),
-      ),
-    );
+              itemBuilder: (context, index) {
+                var today = now;
+                var dayoffset = index - 2 * (index % 7) - 1 + today.weekday;
+                var date = today.subtract(Duration(days: dayoffset));
+                var dateStr = DateFormat("yyyy-MM-dd").format(date);
+                return GestureDetector(
+                  onTap: () {
+                    _showDetails(context, dateStr);
+                  },
+                  child: ScopedModelDescendant<MyModel>(
+                    builder: (context, child, model) => FutureBuilder(
+                      future: model.getForDate(dateStr),
+                      initialData: <Activity>[],
+                      builder: (context, snapshot) => _DayWidget(
+                        children: snapshot.data
+                            .map<Widget>((activity) =>
+                                ActivityCircle(activity: activity, size: 12))
+                            .toList(),
+                        color: dayoffset >= 0
+                            ? Color.fromARGB(255, 255, 255, 255)
+                            : Color.fromARGB(128, 255, 255, 255),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ));
   }
 
   void _showDetails(BuildContext context, String date) {
